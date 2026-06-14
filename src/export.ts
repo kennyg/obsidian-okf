@@ -50,8 +50,14 @@ export function convertLinks(
   sourcePath: string,
   app: App,
   absolute: boolean,
-): { content: string; unresolved: string[] } {
+  rootFolder: string,
+): { content: string; unresolved: string[]; outside: string[] } {
   const unresolved: string[] = [];
+  const outside: string[] = [];
+
+  // Paths inside the bundle are relative to the export root, which becomes the
+  // bundle root. Both file writes and link targets must be rebased the same way.
+  const sourceInBundle = relativeInBundle(sourcePath, rootFolder);
 
   const content = raw.replace(WIKILINK_RE, (whole, bang: string, inner: string) => {
     // inner forms: "Note", "Note|Alias", "Note#Heading", "folder/Note#H|Alias"
@@ -66,12 +72,19 @@ export function convertLinks(
       return whole; // leave untouched so nothing is silently lost
     }
 
+    // Target points outside the export root → it won't exist in the bundle.
+    if (rootFolder && !isUnderRoot(dest.path, rootFolder)) {
+      outside.push(dest.path);
+      return whole;
+    }
+
+    const destInBundle = relativeInBundle(dest.path, rootFolder);
     let target: string;
     if (absolute) {
-      target = "/" + dest.path;
+      target = "/" + destInBundle;
     } else {
-      const fromDir = nodePath.posix.dirname(sourcePath);
-      target = nodePath.posix.relative(fromDir, dest.path) || dest.path;
+      const fromDir = nodePath.posix.dirname(sourceInBundle);
+      target = nodePath.posix.relative(fromDir, destInBundle) || destInBundle;
     }
     // Encode spaces for valid markdown link targets.
     const encodedTarget = encodeURI(target) + encodeURI(anchor);
@@ -80,7 +93,7 @@ export function convertLinks(
     return `${bang}[${alias}](${encodedTarget})`;
   });
 
-  return { content, unresolved };
+  return { content, unresolved, outside };
 }
 
 function listMarkdownFiles(app: App, rootFolder: string): TFile[] {
@@ -91,10 +104,22 @@ function listMarkdownFiles(app: App, rootFolder: string): TFile[] {
     .sort((a, b) => a.path.localeCompare(b.path));
 }
 
+function isUnderRoot(filePath: string, rootFolder: string): boolean {
+  if (!rootFolder) return true;
+  return filePath.startsWith(normalizePath(rootFolder) + "/");
+}
+
 function relativeInBundle(filePath: string, rootFolder: string): string {
   if (!rootFolder) return filePath;
   const prefix = normalizePath(rootFolder) + "/";
   return filePath.startsWith(prefix) ? filePath.slice(prefix.length) : filePath;
+}
+
+/** Folder name to wrap the bundle in, derived from the export root. */
+export function bundleFolderName(rootFolder: string): string {
+  if (!rootFolder) return "okf-bundle";
+  const base = normalizePath(rootFolder).split("/").filter(Boolean).pop();
+  return base || "okf-bundle";
 }
 
 async function ensureDir(dir: string): Promise<void> {
@@ -116,7 +141,9 @@ function tarball(outputDir: string): Promise<string> {
 export async function exportBundle(app: App, opts: ExportOptions): Promise<ExportResult> {
   const files = listMarkdownFiles(app, opts.rootFolder);
   const warnings: string[] = [];
-  await ensureDir(opts.outputDir);
+  // Wrap the bundle in its own folder so it doesn't pollute the output dir.
+  const bundleDir = nodePath.join(opts.outputDir, bundleFolderName(opts.rootFolder));
+  await ensureDir(bundleDir);
 
   // Track concepts for index generation: rel path -> title.
   const concepts: { rel: string; title: string }[] = [];
@@ -125,12 +152,21 @@ export async function exportBundle(app: App, opts: ExportOptions): Promise<Expor
   for (const file of files) {
     const rel = relativeInBundle(file.path, opts.rootFolder);
     const raw = await app.vault.read(file);
-    const { content, unresolved } = convertLinks(raw, file.path, app, opts.absoluteLinks);
+    const { content, unresolved, outside } = convertLinks(
+      raw,
+      file.path,
+      app,
+      opts.absoluteLinks,
+      opts.rootFolder,
+    );
     for (const u of unresolved) {
       warnings.push(`Unresolved link "[[${u}]]" in ${rel} (left as-is).`);
     }
+    for (const o of outside) {
+      warnings.push(`Link to "${o}" in ${rel} points outside the export root (left as-is).`);
+    }
 
-    const outPath = nodePath.join(opts.outputDir, rel);
+    const outPath = nodePath.join(bundleDir, rel);
     await ensureDir(nodePath.dirname(outPath));
     await fsp.writeFile(outPath, content, "utf8");
 
@@ -145,7 +181,7 @@ export async function exportBundle(app: App, opts: ExportOptions): Promise<Expor
   }
 
   if (opts.generateIndex) {
-    const indexPath = nodePath.join(opts.outputDir, "index.md");
+    const indexPath = nodePath.join(bundleDir, "index.md");
     const lines = [
       "---",
       "type: index",
@@ -166,7 +202,7 @@ export async function exportBundle(app: App, opts: ExportOptions): Promise<Expor
   }
 
   if (opts.generateLog && !hasLog) {
-    const logPath = nodePath.join(opts.outputDir, "log.md");
+    const logPath = nodePath.join(bundleDir, "log.md");
     const lines = [
       "---",
       "type: log",
@@ -186,7 +222,7 @@ export async function exportBundle(app: App, opts: ExportOptions): Promise<Expor
   let tarballPath: string | null = null;
   if (opts.createTarball) {
     try {
-      tarballPath = await tarball(opts.outputDir);
+      tarballPath = await tarball(bundleDir);
     } catch (e) {
       warnings.push(`Tarball creation failed: ${(e as Error).message}`);
     }
@@ -194,7 +230,7 @@ export async function exportBundle(app: App, opts: ExportOptions): Promise<Expor
 
   return {
     fileCount: files.length,
-    outputDir: opts.outputDir,
+    outputDir: bundleDir,
     tarballPath,
     warnings,
   };
