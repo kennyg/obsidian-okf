@@ -4,8 +4,8 @@
   "version": "0.1.0",
   "minAppVersion": "1.5.0",
   "description": "Validate, author, and export your vault as Open Knowledge Format (OKF) bundles for AI agents.",
-  "author": "Kenny G",
-  "authorUrl": "https://orbitalworks.com",
+  "author": "Kenny Gatdula",
+  "authorUrl": "https://github.com/kennyg",
   "fundingUrl": "",
   "isDesktopOnly": true
 }

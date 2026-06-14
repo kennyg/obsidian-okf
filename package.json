@@ -19,7 +19,7 @@
     "agents",
     "export"
   ],
-  "author": "Kenny G",
+  "author": "Kenny Gatdula",
   "license": "MIT",
   "devDependencies": {
     "@types/node": "^20.11.0",
