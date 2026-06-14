@@ -8,6 +8,8 @@ export interface OkfSettings {
   knownTypes: string;
   /** Vault-relative folder used as the export root ("" = whole vault). */
   exportRoot: string;
+  /** Name of the bundle folder ("" = derive from export root). */
+  bundleName: string;
   /** Absolute filesystem path of the export output directory. */
   exportOutputDir: string;
   absoluteLinks: boolean;
@@ -20,6 +22,7 @@ export const DEFAULT_SETTINGS: OkfSettings = {
   defaultType: "note",
   knownTypes: "note, table, dataset, metric, playbook, runbook, api",
   exportRoot: "",
+  bundleName: "",
   exportOutputDir: "",
   absoluteLinks: true,
   generateIndex: true,
@@ -77,6 +80,19 @@ export class OkfSettingTab extends PluginSettingTab {
           .setValue(this.plugin.settings.exportRoot)
           .onChange(async (v) => {
             this.plugin.settings.exportRoot = v.trim();
+            await this.plugin.saveSettings();
+          }),
+      );
+
+    new Setting(containerEl)
+      .setName("Bundle name")
+      .setDesc("Folder name for the exported bundle. Leave blank to derive it from the export root.")
+      .addText((t) =>
+        t
+          .setPlaceholder("(derive from export root)")
+          .setValue(this.plugin.settings.bundleName)
+          .onChange(async (v) => {
+            this.plugin.settings.bundleName = v.trim();
             await this.plugin.saveSettings();
           }),
       );

@@ -40,7 +40,8 @@ with wikilinks, export to standard-markdown OKF.
 
 - **Default concept type** and **Known types** — drive the New-concept picker.
 - **Export root folder** — vault-relative; blank = whole vault.
-- **Output directory** — absolute filesystem path for the bundle.
+- **Bundle name** — folder name for the export; blank = derived from the export root.
+- **Output directory** — absolute filesystem path the bundle folder is written into.
 - **Absolute links** — rewrite as `/path.md` from bundle root (OKF recommended).
 - **Generate index.md / log.md** — toggle the reserved files.
 - **Create tarball** — also emit `<bundle>.tar.gz` (requires `tar`).

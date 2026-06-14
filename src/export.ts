@@ -15,11 +15,13 @@ import { promises as fsp } from "fs";
 import * as nodePath from "path";
 import { execFile } from "child_process";
 import { App, TFile, normalizePath } from "obsidian";
-import { parseConcept, isReservedFilename, nowIso } from "./okf";
+import { parseConcept, isReservedFilename, nowIso, OKF_VERSION } from "./okf";
 
 export interface ExportOptions {
   /** Vault-relative folder to export; "" means the whole vault. */
   rootFolder: string;
+  /** Explicit bundle folder name; "" derives it from the export root. */
+  bundleName: string;
   /** Absolute filesystem path of the output bundle directory. */
   outputDir: string;
   /** Rewrite links as absolute-from-root (recommended) vs. keep relative. */
@@ -115,8 +117,18 @@ function relativeInBundle(filePath: string, rootFolder: string): string {
   return filePath.startsWith(prefix) ? filePath.slice(prefix.length) : filePath;
 }
 
-/** Folder name to wrap the bundle in, derived from the export root. */
-export function bundleFolderName(rootFolder: string): string {
+/** Sanitize a user-supplied bundle name into a safe single path segment. */
+function sanitizeBundleName(name: string): string {
+  return name.replace(/[\\/:*?"<>|]/g, "-").replace(/^\.+/, "").trim();
+}
+
+/**
+ * Folder name to wrap the bundle in. An explicit name wins (sanitized);
+ * otherwise it's derived from the export root, falling back to "okf-bundle".
+ */
+export function bundleFolderName(rootFolder: string, explicit = ""): string {
+  const named = sanitizeBundleName(explicit);
+  if (named) return named;
   if (!rootFolder) return "okf-bundle";
   const base = normalizePath(rootFolder).split("/").filter(Boolean).pop();
   return base || "okf-bundle";
@@ -142,7 +154,10 @@ export async function exportBundle(app: App, opts: ExportOptions): Promise<Expor
   const files = listMarkdownFiles(app, opts.rootFolder);
   const warnings: string[] = [];
   // Wrap the bundle in its own folder so it doesn't pollute the output dir.
-  const bundleDir = nodePath.join(opts.outputDir, bundleFolderName(opts.rootFolder));
+  const bundleDir = nodePath.join(
+    opts.outputDir,
+    bundleFolderName(opts.rootFolder, opts.bundleName),
+  );
   await ensureDir(bundleDir);
 
   // Track concepts for index generation: rel path -> title.
@@ -187,6 +202,7 @@ export async function exportBundle(app: App, opts: ExportOptions): Promise<Expor
       "type: index",
       "title: Bundle Index",
       `description: Auto-generated OKF index of ${concepts.length} concepts.`,
+      `okf_version: "${OKF_VERSION}"`,
       `timestamp: ${nowIso()}`,
       "---",
       "",

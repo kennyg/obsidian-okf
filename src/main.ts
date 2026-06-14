@@ -99,6 +99,7 @@ export default class OkfPlugin extends Plugin {
     try {
       const result = await exportBundle(this.app, {
         rootFolder: this.settings.exportRoot,
+        bundleName: this.settings.bundleName,
         outputDir: out,
         absoluteLinks: this.settings.absoluteLinks,
         generateIndex: this.settings.generateIndex,

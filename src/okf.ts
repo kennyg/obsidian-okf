@@ -13,6 +13,9 @@
 
 import { parseYaml } from "obsidian";
 
+/** The OKF spec version this plugin targets. */
+export const OKF_VERSION = "0.1";
+
 /** Filenames the spec reserves with special meaning. */
 export const RESERVED_FILENAMES = ["index.md", "log.md"] as const;
 
