@@ -1,0 +1,11 @@
+{
+  "id": "obsidian-okf",
+  "name": "Open Knowledge Format",
+  "version": "0.1.0",
+  "minAppVersion": "1.5.0",
+  "description": "Validate, author, and export your vault as Open Knowledge Format (OKF) bundles for AI agents.",
+  "author": "Kenny G",
+  "authorUrl": "https://orbitalworks.com",
+  "fundingUrl": "",
+  "isDesktopOnly": true
+}

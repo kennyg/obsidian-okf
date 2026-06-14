@@ -1,0 +1,13 @@
+.okf-errors li strong {
+  color: var(--text-error);
+}
+
+.okf-warnings li strong {
+  color: var(--text-warning);
+}
+
+.okf-errors,
+.okf-warnings {
+  max-height: 40vh;
+  overflow-y: auto;
+}
