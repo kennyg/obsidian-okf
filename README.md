@@ -52,7 +52,13 @@ with wikilinks, export to standard-markdown OKF.
 npm install
 npm run dev      # watch build
 npm run build    # type-check + production bundle
+npm test         # run the Vitest suite
+npm run test:watch
 ```
+
+Tests run against a stub of the `obsidian` module (`test/__mocks__/obsidian.ts`)
+so the spec logic, link conversion, and bundle naming are covered without the
+app. See `test/okf.test.ts` and `test/export.test.ts`.
 
 Desktop-only (export uses Node `fs` and `tar`).
 
