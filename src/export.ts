@@ -91,7 +91,8 @@ export function convertLinks(
     // Encode spaces for valid markdown link targets.
     const encodedTarget = encodeURI(target) + encodeURI(anchor);
 
-    const alias = (aliasRaw ?? linkAndAnchor).trim();
+    // Default display text is the linkpath; the anchor lives in the URL only.
+    const alias = (aliasRaw ?? linkpath).trim();
     return `${bang}[${alias}](${encodedTarget})`;
   });
 
