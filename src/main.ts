@@ -3,22 +3,24 @@ import { DEFAULT_SETTINGS, OkfSettings, OkfSettingTab } from "./settings";
 import { buildConceptSkeleton, Issue, validateConcept } from "./okf";
 import { exportBundle } from "./export";
 import { NewConceptModal, ValidationResultModal } from "./ui";
+import { refreshLocale, t } from "./i18n";
 
 export default class OkfPlugin extends Plugin {
   settings: OkfSettings = DEFAULT_SETTINGS;
 
   async onload(): Promise<void> {
+    refreshLocale();
     await this.loadSettings();
 
     this.addCommand({
       id: "okf-validate-vault",
-      name: "Validate OKF conformance (whole vault)",
+      name: t("command.validateVault"),
       callback: () => this.validate(""),
     });
 
     this.addCommand({
       id: "okf-validate-folder",
-      name: "Validate OKF conformance (active file's folder)",
+      name: t("command.validateFolder"),
       callback: () => {
         const folder = this.activeFolder();
         this.validate(folder);
@@ -27,13 +29,13 @@ export default class OkfPlugin extends Plugin {
 
     this.addCommand({
       id: "okf-new-concept",
-      name: "New OKF concept",
+      name: t("command.newConcept"),
       callback: () => this.newConcept(),
     });
 
     this.addCommand({
       id: "okf-export-bundle",
-      name: "Export OKF bundle",
+      name: t("command.exportBundle"),
       callback: () => this.export(),
     });
 
@@ -80,11 +82,11 @@ export default class OkfPlugin extends Plugin {
         try {
           file = await this.app.vault.create(path, skeleton);
         } catch (e) {
-          new Notice(`Could not create concept: ${(e as Error).message}`);
+          new Notice(t("notice.createFailed", { error: (e as Error).message }));
           return;
         }
         await this.app.workspace.getLeaf(true).openFile(file);
-        new Notice(`Created OKF concept "${title}".`);
+        new Notice(t("notice.created", { title }));
       },
     ).open();
   }
@@ -92,10 +94,10 @@ export default class OkfPlugin extends Plugin {
   private async export(): Promise<void> {
     const out = this.settings.exportOutputDir.trim();
     if (!out) {
-      new Notice("Set an output directory in OKF settings first.");
+      new Notice(t("notice.noOutputDir"));
       return;
     }
-    new Notice("Exporting OKF bundle…");
+    new Notice(t("notice.exporting"));
     try {
       const result = await exportBundle(this.app, {
         rootFolder: this.settings.exportRoot,
@@ -107,13 +109,13 @@ export default class OkfPlugin extends Plugin {
         createTarball: this.settings.createTarball,
       });
 
-      const parts = [`Exported ${result.fileCount} file(s) → ${result.outputDir}`];
-      if (result.tarballPath) parts.push(`Tarball: ${result.tarballPath}`);
-      if (result.warnings.length) parts.push(`${result.warnings.length} warning(s) — see console.`);
+      const parts = [t("notice.exported", { count: result.fileCount, dir: result.outputDir })];
+      if (result.tarballPath) parts.push(t("notice.tarball", { path: result.tarballPath }));
+      if (result.warnings.length) parts.push(t("notice.warnings", { count: result.warnings.length }));
       if (result.warnings.length) console.warn("[OKF export]", result.warnings);
       new Notice(parts.join("\n"), 8000);
     } catch (e) {
-      new Notice(`OKF export failed: ${(e as Error).message}`);
+      new Notice(t("notice.exportFailed", { error: (e as Error).message }));
       console.error("[OKF export]", e);
     }
   }

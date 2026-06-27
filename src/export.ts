@@ -16,6 +16,7 @@ import * as nodePath from "path";
 import { execFile } from "child_process";
 import { App, TFile, normalizePath } from "obsidian";
 import { parseConcept, isReservedFilename, nowIso, OKF_VERSION } from "./okf";
+import { t } from "./i18n";
 
 export interface ExportOptions {
   /** Vault-relative folder to export; "" means the whole vault. */
@@ -176,10 +177,10 @@ export async function exportBundle(app: App, opts: ExportOptions): Promise<Expor
       opts.rootFolder,
     );
     for (const u of unresolved) {
-      warnings.push(`Unresolved link "[[${u}]]" in ${rel} (left as-is).`);
+      warnings.push(t("export.unresolved", { link: u, file: rel }));
     }
     for (const o of outside) {
-      warnings.push(`Link to "${o}" in ${rel} points outside the export root (left as-is).`);
+      warnings.push(t("export.outside", { target: o, file: rel }));
     }
 
     const outPath = nodePath.join(bundleDir, rel);
@@ -241,7 +242,7 @@ export async function exportBundle(app: App, opts: ExportOptions): Promise<Expor
     try {
       tarballPath = await tarball(bundleDir);
     } catch (e) {
-      warnings.push(`Tarball creation failed: ${(e as Error).message}`);
+      warnings.push(t("export.tarballFailed", { error: (e as Error).message }));
     }
   }
 

@@ -10,6 +10,10 @@ with frontmatter and cross-links. This plugin closes the remaining gaps OKF
 v0.1 cares about — the required `type` field, the reserved `index.md` / `log.md`
 files, and standard (not wiki) links absolute from the bundle root.
 
+The plugin UI is localized and follows your Obsidian display language, falling
+back to English. Italian is bundled; adding a language is one entry in
+`src/i18n.ts`.
+
 ## Commands
 
 | Command | What it does |
