@@ -1,3 +1,5 @@
+[![English](https://img.shields.io/badge/lang-English-blue.svg)](README.md) [![Italiano](https://img.shields.io/badge/lang-Italiano-lightgrey.svg)](README.it.md)
+
 # Open Knowledge Format for Obsidian
 
 Validate, author, and export your Obsidian vault as [Open Knowledge Format
