@@ -12,6 +12,7 @@
  */
 
 import { parseYaml } from "obsidian";
+import { t } from "./i18n";
 
 /** The OKF spec version this plugin targets. */
 export const OKF_VERSION = "0.1";
@@ -102,15 +103,15 @@ export function validateConcept(path: string, raw: string, filename: string): Is
   const { frontmatter, parseError } = parseConcept(raw);
 
   if (parseError) {
-    issues.push({ path, severity: "error", message: "Frontmatter is not parseable YAML." });
+    issues.push({ path, severity: "error", message: t("validate.unparseable") });
     return issues;
   }
   if (frontmatter === null) {
-    issues.push({ path, severity: "error", message: "Missing YAML frontmatter block." });
+    issues.push({ path, severity: "error", message: t("validate.missingFrontmatter") });
     return issues;
   }
   if (!isNonEmpty(frontmatter.type)) {
-    issues.push({ path, severity: "error", message: "Missing required non-empty `type` field." });
+    issues.push({ path, severity: "error", message: t("validate.missingType") });
   }
 
   for (const field of RECOMMENDED_FIELDS) {
@@ -118,7 +119,7 @@ export function validateConcept(path: string, raw: string, filename: string): Is
       issues.push({
         path,
         severity: "warning",
-        message: `Missing recommended \`${field}\` field.`,
+        message: t("validate.missingRecommended", { field }),
       });
     }
   }

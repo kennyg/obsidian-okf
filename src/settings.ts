@@ -1,5 +1,6 @@
 import { App, PluginSettingTab, Setting } from "obsidian";
 import type OkfPlugin from "./main";
+import { t } from "./i18n";
 
 export interface OkfSettings {
   /** Default `type` pre-filled when creating a new concept. */
@@ -42,13 +43,13 @@ export class OkfSettingTab extends PluginSettingTab {
     const { containerEl } = this;
     containerEl.empty();
 
-    containerEl.createEl("h3", { text: "Authoring" });
+    containerEl.createEl("h3", { text: t("settings.authoring") });
 
     new Setting(containerEl)
-      .setName("Default concept type")
-      .setDesc("Pre-filled `type` when creating a new OKF concept.")
-      .addText((t) =>
-        t
+      .setName(t("settings.defaultType"))
+      .setDesc(t("settings.defaultTypeDesc"))
+      .addText((txt) =>
+        txt
           .setPlaceholder("note")
           .setValue(this.plugin.settings.defaultType)
           .onChange(async (v) => {
@@ -58,10 +59,10 @@ export class OkfSettingTab extends PluginSettingTab {
       );
 
     new Setting(containerEl)
-      .setName("Known types")
-      .setDesc("Comma-separated type suggestions offered when authoring.")
-      .addText((t) =>
-        t
+      .setName(t("settings.knownTypes"))
+      .setDesc(t("settings.knownTypesDesc"))
+      .addText((txt) =>
+        txt
           .setValue(this.plugin.settings.knownTypes)
           .onChange(async (v) => {
             this.plugin.settings.knownTypes = v;
@@ -69,14 +70,14 @@ export class OkfSettingTab extends PluginSettingTab {
           }),
       );
 
-    containerEl.createEl("h3", { text: "Export" });
+    containerEl.createEl("h3", { text: t("settings.export") });
 
     new Setting(containerEl)
-      .setName("Export root folder")
-      .setDesc("Vault-relative folder to export. Leave blank to export the whole vault.")
-      .addText((t) =>
-        t
-          .setPlaceholder("(whole vault)")
+      .setName(t("settings.exportRoot"))
+      .setDesc(t("settings.exportRootDesc"))
+      .addText((txt) =>
+        txt
+          .setPlaceholder(t("settings.exportRootPlaceholder"))
           .setValue(this.plugin.settings.exportRoot)
           .onChange(async (v) => {
             this.plugin.settings.exportRoot = v.trim();
@@ -85,11 +86,11 @@ export class OkfSettingTab extends PluginSettingTab {
       );
 
     new Setting(containerEl)
-      .setName("Bundle name")
-      .setDesc("Folder name for the exported bundle. Leave blank to derive it from the export root.")
-      .addText((t) =>
-        t
-          .setPlaceholder("(derive from export root)")
+      .setName(t("settings.bundleName"))
+      .setDesc(t("settings.bundleNameDesc"))
+      .addText((txt) =>
+        txt
+          .setPlaceholder(t("settings.bundleNamePlaceholder"))
           .setValue(this.plugin.settings.bundleName)
           .onChange(async (v) => {
             this.plugin.settings.bundleName = v.trim();
@@ -98,10 +99,10 @@ export class OkfSettingTab extends PluginSettingTab {
       );
 
     new Setting(containerEl)
-      .setName("Output directory")
-      .setDesc("Absolute filesystem path where the OKF bundle is written.")
-      .addText((t) =>
-        t
+      .setName(t("settings.outputDir"))
+      .setDesc(t("settings.outputDirDesc"))
+      .addText((txt) =>
+        txt
           .setPlaceholder("/Users/you/okf-bundle")
           .setValue(this.plugin.settings.exportOutputDir)
           .onChange(async (v) => {
@@ -111,8 +112,8 @@ export class OkfSettingTab extends PluginSettingTab {
       );
 
     new Setting(containerEl)
-      .setName("Absolute links")
-      .setDesc("Rewrite links as absolute-from-bundle-root (OKF recommended).")
+      .setName(t("settings.absoluteLinks"))
+      .setDesc(t("settings.absoluteLinksDesc"))
       .addToggle((tg) =>
         tg.setValue(this.plugin.settings.absoluteLinks).onChange(async (v) => {
           this.plugin.settings.absoluteLinks = v;
@@ -121,8 +122,8 @@ export class OkfSettingTab extends PluginSettingTab {
       );
 
     new Setting(containerEl)
-      .setName("Generate index.md")
-      .setDesc("Write a progressive-disclosure index of concepts.")
+      .setName(t("settings.generateIndex"))
+      .setDesc(t("settings.generateIndexDesc"))
       .addToggle((tg) =>
         tg.setValue(this.plugin.settings.generateIndex).onChange(async (v) => {
           this.plugin.settings.generateIndex = v;
@@ -131,8 +132,8 @@ export class OkfSettingTab extends PluginSettingTab {
       );
 
     new Setting(containerEl)
-      .setName("Generate log.md")
-      .setDesc("Write a change-log stub if the bundle lacks one.")
+      .setName(t("settings.generateLog"))
+      .setDesc(t("settings.generateLogDesc"))
       .addToggle((tg) =>
         tg.setValue(this.plugin.settings.generateLog).onChange(async (v) => {
           this.plugin.settings.generateLog = v;
@@ -141,8 +142,8 @@ export class OkfSettingTab extends PluginSettingTab {
       );
 
     new Setting(containerEl)
-      .setName("Create tarball")
-      .setDesc("Also produce a .tar.gz of the bundle (requires `tar`).")
+      .setName(t("settings.createTarball"))
+      .setDesc(t("settings.createTarballDesc"))
       .addToggle((tg) =>
         tg.setValue(this.plugin.settings.createTarball).onChange(async (v) => {
           this.plugin.settings.createTarball = v;

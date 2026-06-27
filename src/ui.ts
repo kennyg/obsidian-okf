@@ -1,5 +1,6 @@
 import { App, Modal, Setting } from "obsidian";
 import type { Issue } from "./okf";
+import { t } from "./i18n";
 
 /** Modal that renders the result of a conformance validation run. */
 export class ValidationResultModal extends Modal {
@@ -19,21 +20,26 @@ export class ValidationResultModal extends Modal {
     const errors = this.issues.filter((i) => i.severity === "error");
     const warnings = this.issues.filter((i) => i.severity === "warning");
 
-    contentEl.createEl("h2", { text: "OKF conformance" });
+    contentEl.createEl("h2", { text: t("validate.title") });
 
-    const verdict = errors.length === 0 ? "✅ Conformant" : "❌ Not conformant";
+    const verdict = errors.length === 0 ? t("validate.conformant") : t("validate.notConformant");
     contentEl.createEl("p", {
-      text: `${verdict} — scanned ${this.scanned} concept file(s): ${errors.length} error(s), ${warnings.length} warning(s).`,
+      text: t("validate.summary", {
+        verdict,
+        scanned: this.scanned,
+        errors: errors.length,
+        warnings: warnings.length,
+      }),
     });
 
     if (this.issues.length === 0) {
-      contentEl.createEl("p", { text: "No issues found. Every concept carries a `type`." });
+      contentEl.createEl("p", { text: t("validate.noIssues") });
       return;
     }
 
-    const render = (title: string, items: Issue[], cls: string) => {
+    const render = (heading: string, items: Issue[], cls: string) => {
       if (items.length === 0) return;
-      contentEl.createEl("h3", { text: title });
+      contentEl.createEl("h3", { text: heading });
       const list = contentEl.createEl("ul", { cls });
       for (const i of items) {
         const li = list.createEl("li");
@@ -42,8 +48,8 @@ export class ValidationResultModal extends Modal {
       }
     };
 
-    render(`Errors (${errors.length})`, errors, "okf-errors");
-    render(`Warnings (${warnings.length})`, warnings, "okf-warnings");
+    render(t("validate.errorsHeading", { count: errors.length }), errors, "okf-errors");
+    render(t("validate.warningsHeading", { count: warnings.length }), warnings, "okf-warnings");
   }
 
   onClose(): void {
@@ -73,29 +79,29 @@ export class NewConceptModal extends Modal {
   onOpen(): void {
     const { contentEl } = this;
     contentEl.empty();
-    contentEl.createEl("h2", { text: "New OKF concept" });
+    contentEl.createEl("h2", { text: t("concept.title") });
 
-    new Setting(contentEl).setName("Title").addText((t) =>
-      t.setPlaceholder("Weekly Active Users").onChange((v) => (this.title = v.trim())),
+    new Setting(contentEl).setName(t("concept.titleField")).addText((txt) =>
+      txt.setPlaceholder(t("concept.titlePlaceholder")).onChange((v) => (this.title = v.trim())),
     );
 
     new Setting(contentEl)
-      .setName("Type")
-      .setDesc("Required by OKF.")
+      .setName(t("concept.typeField"))
+      .setDesc(t("concept.typeDesc"))
       .addDropdown((d) => {
-        for (const t of this.knownTypes) d.addOption(t, t);
+        for (const ty of this.knownTypes) d.addOption(ty, ty);
         if (!this.knownTypes.includes(this.type) && this.type) d.addOption(this.type, this.type);
         d.setValue(this.type);
         d.onChange((v) => (this.type = v));
       });
 
-    new Setting(contentEl).setName("Description").addText((t) =>
-      t.setPlaceholder("One-sentence summary").onChange((v) => (this.description = v.trim())),
+    new Setting(contentEl).setName(t("concept.descField")).addText((txt) =>
+      txt.setPlaceholder(t("concept.descPlaceholder")).onChange((v) => (this.description = v.trim())),
     );
 
     new Setting(contentEl).addButton((b) =>
       b
-        .setButtonText("Create")
+        .setButtonText(t("concept.create"))
         .setCta()
         .onClick(() => {
           if (!this.title) return;
